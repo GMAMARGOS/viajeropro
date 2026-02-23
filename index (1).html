@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Viajero Pro + Full</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#020617">
+
+    <style>
+        :root {
+            --bg: #020617; --card: #1e293b; --text: #f8fafc; --accent: #38bdf8;
+            --input-bg: #1e293b; --border: #334155; --success: #4ade80; --danger: #f87171; 
+            --panel: #0f172a;
+        }
+        body {
+            font-family: -apple-system, system-ui, sans-serif;
+            background-color: var(--bg); color: var(--text); margin: 0;
+            padding: env(safe-area-inset-top) 15px 120px 15px; display: flex; flex-direction: column; align-items: center;
+        }
+
+        .status-header {
+            width: 100%; max-width: 450px; display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin: 15px 0;
+        }
+        .stat-card { background: var(--panel); border: 1px solid var(--border); padding: 8px; border-radius: 12px; text-align: center; }
+        .stat-label { font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; display: block; }
+        .stat-val { font-size: 0.85rem; font-weight: 700; color: var(--accent); }
+
+        .main-card {
+            background: linear-gradient(145deg, #1e293b, #0f172a); width: 100%; max-width: 450px;
+            padding: 20px; border-radius: 28px; border: 1px solid #334155; box-sizing: border-box;
+        }
+
+        .advice-box {
+            padding: 12px; border-radius: 16px; margin-bottom: 15px; text-align: center;
+            font-weight: 800; font-size: 0.9rem; display: none;
+        }
+        .advice-green { background: rgba(74, 222, 128, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .advice-blue { background: rgba(56, 189, 248, 0.15); color: var(--accent); border: 1px solid var(--accent); }
+
+        .selector-row { display: flex; gap: 8px; align-items: center; margin-bottom: 15px; }
+        select { flex: 1; background: var(--input-bg); border: 1px solid var(--border); color: var(--accent); padding: 12px; border-radius: 12px; font-weight: bold; outline: none; }
+        .btn-swap { background: var(--accent); color: var(--bg); border: none; width: 45px; height: 45px; border-radius: 12px; font-size: 1.2rem; cursor: pointer; }
+
+        .input-box {
+            background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 20px;
+            border: 1px solid var(--border); text-align: center; margin-bottom: 15px;
+        }
+        .input-box input { background: transparent; border: none; color: white; font-size: 2.2rem; font-weight: 700; width: 100%; text-align: center; outline: none; }
+
+        .btn-chango {
+            background: var(--accent); color: var(--bg); border: none; width: 100%;
+            padding: 16px; border-radius: 16px; font-weight: 800; font-size: 1rem;
+            display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 15px;
+        }
+
+        .res-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dotted var(--border); }
+        .res-item b { font-size: 1.1rem; }
+        .res-info span { font-size: 0.75rem; color: #94a3b8; display: block; }
+
+        .aduna-box { width: 100%; max-width: 450px; background: #172554; padding: 15px; border-radius: 20px; margin-top: 15px; box-sizing: border-box; }
+        .progress-bg { background: #1e3a8a; height: 8px; border-radius: 10px; margin-top: 8px; overflow: hidden; }
+        .progress-bar { background: var(--success); height: 100%; width: 0%; transition: 0.5s; }
+
+        .chango-float {
+            position: fixed; bottom: 20px; width: 90%; max-width: 400px;
+            background: var(--success); color: var(--bg); padding: 18px;
+            border-radius: 24px; display: flex; justify-content: space-between;
+            align-items: center; font-weight: 900; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+    </style>
+</head>
+<body>
+
+<div class="status-header">
+    <div class="stat-card"><span class="stat-label">CLP</span><span id="l-clp">...</span></div>
+    <div class="stat-card"><span class="stat-label">BLUE</span><span id="l-blue">...</span></div>
+    <div class="stat-card"><span class="stat-label">TARJETA</span><span id="l-tj">...</span></div>
+</div>
+
+<div class="main-card">
+    <div id="advice" class="advice-box"></div>
+
+    <div class="selector-row">
+        <select id="from" onchange="convertir()">
+            <option value="CLP">🇨🇱 PESO CHILE (CLP)</option>
+            <option value="ARS">🇦🇷 PESO ARG (BLUE)</option>
+            <option value="USD">🇺🇸 DÓLAR (BILLETE)</option>
+        </select>
+        <button class="btn-swap" onclick="swapCurrencies()">⇄</button>
+    </div>
+
+    <div class="input-box">
+        <input type="number" id="amount" inputmode="decimal" placeholder="0" oninput="convertir()">
+    </div>
+
+    <button class="btn-chango" onclick="addToCart()">🛒 SUMAR AL CHANGO</button>
+
+    <div id="res-list"></div>
+</div>
+
+<div class="aduna-box">
+    <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:bold;">
+        <span>FRANQUICIA USD 300</span>
+        <span id="aduana-txt">0%</span>
+    </div>
+    <div class="progress-bg"><div class="progress-bar" id="aduana-bar"></div></div>
+</div>
+
+<div class="chango-float" id="chango-bar" style="display: none;">
+    <div><small style="font-size:0.6rem; display:block">TOTAL ACUMULADO</small><span id="chango-total">$0</span></div>
+    <button onclick="resetCart()" style="background:var(--bg); color:white; border:none; padding:8px 12px; border-radius:10px; font-weight:bold">Reset</button>
+</div>
+
+<script>
+    let rates = { clp: 0, blue: 0, tarjeta: 0 };
+    let cartUSD = 0;
+
+    async function getData() {
+        try {
+            const [r1, r2, r3] = await Promise.all([
+                fetch('https://open.er-api.com/v6/latest/USD'),
+                fetch('https://dolarapi.com/v1/dolares/blue'),
+                fetch('https://dolarapi.com/v1/dolares/tarjeta')
+            ]);
+            const d1 = await r1.json();
+            rates = { clp: d1.rates.CLP, blue: (await r2.json()).venta, tarjeta: (await r3.json()).venta };
+            
+            document.getElementById('l-clp').className = 'stat-val';
+            document.getElementById('l-clp').innerText = `$${Math.round(rates.clp)}`;
+            document.getElementById('l-blue').innerText = `$${Math.round(rates.blue)}`;
+            document.getElementById('l-tj').innerText = `$${Math.round(rates.tarjeta)}`;
+            
+            showAdvice();
+            convertir();
+        } catch(e) { console.log("Offline"); }
+    }
+
+    function swapCurrencies() {
+        const sel = document.getElementById('from');
+        if (sel.value === "CLP") sel.value = "ARS";
+        else if (sel.value === "ARS") sel.value = "CLP";
+        else sel.value = "CLP";
+        convertir();
+    }
+
+    function showAdvice() {
+        const adv = document.getElementById('advice');
+        adv.style.display = "block";
+        if (rates.tarjeta < rates.blue) {
+            adv.className = "advice-box advice-green";
+            adv.innerText = "🟢 CONVIENE: PAGAR CON DÉBITO";
+        } else {
+            adv.className = "advice-box advice-blue";
+            adv.innerText = "🔵 CONVIENE: PAGAR CON EFECTIVO";
+        }
+    }
+
+    function convertir() {
+        const val = parseFloat(document.getElementById('amount').value) || 0;
+        const from = document.getElementById('from').value;
+        let usd = 0;
+
+        if (from === 'USD') usd = val;
+        else if (from === 'CLP') usd = val / rates.clp;
+        else usd = val / rates.blue;
+        
+        const fA = new Intl.NumberFormat('es-AR');
+        const fC = new Intl.NumberFormat('es-CL');
+
+        document.getElementById('res-list').innerHTML = `
+            <div class="res-item"><div class="res-info"><span>Chile</span><b>🇨🇱 ${fC.format(Math.round(usd * rates.clp))} CLP</b></div></div>
+            <div class="res-item"><div class="res-info"><span>Efectivo Blue</span><b style="color:var(--success)">💵 $${fA.format(Math.round(usd * rates.blue))} ARS</b></div></div>
+            <div class="res-item"><div class="res-info"><span>Tarjeta (Impuestos inc.)</span><b style="color:var(--danger)">💳 $${fA.format(Math.round(usd * rates.tarjeta))} ARS</b></div></div>
+            <div class="res-item"><div class="res-info"><span>Dólares Aduana</span><b>🇺🇸 USD ${usd.toFixed(2)}</b></div></div>
+        `;
+        return usd;
+    }
+
+    function addToCart() {
+        const usd = convertir();
+        if(usd > 0) {
+            cartUSD += usd;
+            document.getElementById('chango-bar').style.display = "flex";
+            document.getElementById('chango-total').innerText = `$${Math.round(cartUSD * Math.min(rates.blue, rates.tarjeta)).toLocaleString()} ARS`;
+            const p = Math.min((cartUSD / 300) * 100, 100);
+            document.getElementById('aduana-bar').style.width = p + "%";
+            document.getElementById('aduana-txt').innerText = Math.round(p) + "%";
+            document.getElementById('aduana-bar').style.background = p > 90 ? "var(--danger)" : "var(--success)";
+            document.getElementById('amount').value = "";
+        }
+    }
+
+    function resetCart() { cartUSD = 0; document.getElementById('chango-bar').style.display = "none"; document.getElementById('aduana-bar').style.width = "0%"; document.getElementById('aduana-txt').innerText = "0%"; }
+
+    getData();
+</script>
+</body>
+</html>
